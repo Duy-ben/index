@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyến Tàu Sinh Nhật: Love Express 🚂</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: radial-gradient(circle, #1e293b 0%, #090d16 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            color: #333;
+            overflow: hidden;
+            position: relative;
+        }
+        /* Nút bật/tắt nhạc góc phải */
+        
+        .music-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 999;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        /* Rung màn hình khi tàu chạy qua */
+        
+        .earthquake {
+            animation: shakeScreen 0.1s infinite;
+        }
+        
+        @keyframes shakeScreen {
+            0% {
+                transform: translate(1px, 1px) rotate(0deg);
+            }
+            20% {
+                transform: translate(-2px, -1px) rotate(-0.5deg);
+            }
+            40% {
+                transform: translate(-1px, 2px) rotate(0.5deg);
+            }
+            60% {
+                transform: translate(2px, 1px) rotate(0deg);
+            }
+            80% {
+                transform: translate(1px, -2px) rotate(0.5deg);
+            }
+            100% {
+                transform: translate(-1px, 1px) rotate(-0.5deg);
+            }
+        }
+        
+        .title-hint {
+            color: #f1f5f9;
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.03);
+            }
+        }
+        /* 1. VÉ TÀU */
+        
+        .ticket-container {
+            position: relative;
+            width: 100%;
+            max-width: 360px;
+            background: #fffdfa;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            transition: all 0.6s ease;
+        }
+        
+        .ticket-header {
+            background: #dc2626;
+            color: white;
+            padding: 16px 20px;
+            text-align: center;
+            border-bottom: 2px dashed #b91c1c;
+        }
+        
+        .ticket-header h2 {
+            font-size: 1.25rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+        
+        .ticket-header p {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        
+        .ticket-body {
+            padding: 20px;
+        }
+        
+        .route {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        
+        .station {
+            text-align: center;
+        }
+        
+        .station-code {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+        
+        .station-name {
+            font-size: 0.78rem;
+            color: #64748b;
+        }
+        
+        .train-icon {
+            font-size: 1.5rem;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 18px;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #f1f5f9;
+        }
+        
+        .info-item span {
+            display: block;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .info-item strong {
+            font-size: 0.92rem;
+            color: #334155;
+        }
+        
+        .tear-line {
+            position: relative;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            margin: 0 -20px;
+        }
+        
+        .tear-line::before,
+        .tear-line::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: #090d16;
+            border-radius: 50%;
+        }
+        
+        .tear-line::before {
+            left: -12px;
+        }
+        
+        .tear-line::after {
+            right: -12px;
+        }
+        
+        .dashed {
+            width: 100%;
+            border-bottom: 2px dashed #cbd5e1;
+        }
+        
+        .ticket-stub {
+            padding: 16px 20px 22px 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .punch-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+            transition: transform 0.2s;
+        }
+        
+        .punch-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .stamp {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg) scale(2);
+            border: 3px solid #16a34a;
+            color: #16a34a;
+            font-size: 1.25rem;
+            font-weight: 900;
+            padding: 6px 16px;
+            border-radius: 8px;
+            letter-spacing: 2px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .stamp.stamped {
+            display: block;
+            opacity: 0.95;
+            transform: translate(-50%, -50%) rotate(-15deg) scale(1);
+        }
+        /* 2. ĐOÀN TÀU CHẠY ĐÚNG CHIỀU */
+        
+        .train-stage {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(9, 13, 22, 0.95);
+        }
+        
+        .train-caption {
+            color: #facc15;
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 0 0 16px rgba(250, 204, 21, 0.6);
+            padding: 0 20px;
+        }
+        
+        .train-track-view {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            overflow: hidden;
+            border-bottom: 10px solid #475569;
+            box-shadow: 0 10px 0 #1e293b;
+        }
+        
+        .giant-train {
+            position: absolute;
+            bottom: 0;
+            left: -1300px;
+            display: flex;
+            align-items: flex-end;
+            will-change: transform;
+        }
+        
+        .giant-train.run {
+            animation: giantTrainPass 5.2s linear forwards;
+        }
+        
+        @keyframes giantTrainPass {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(calc(100vw + 1500px));
+            }
+        }
+        
+        .locomotive {
+            width: 280px;
+            height: 190px;
+            position: relative;
+            transform: scaleX(-1);
+        }
+        
+        .train-carriage {
+            width: 250px;
+            height: 165px;
+            background: linear-gradient(to top, #7f1d1d, #b91c1c);
+            border-radius: 14px 14px 4px 4px;
+            border: 3px solid #fecdd3;
+            position: relative;
+            margin-right: 15px;
+            box-shadow: inset 0 -10px 0 rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .carriage-label {
+            background: #fbbf24;
+            color: #78350f;
+            font-size: 0.95rem;
+            font-weight: 800;
+            padding: 4px 16px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 12px;
+        }
+        
+        .carriage-windows {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .window {
+            width: 44px;
+            height: 44px;
+            background: #fef08a;
+            border-radius: 8px;
+            box-shadow: 0 0 12px #fef08a;
+        }
+        
+        .carriage-wheels {
+            position: absolute;
+            bottom: -16px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 15px;
+        }
+        
+        .wheel {
+            width: 34px;
+            height: 34px;
+            background: #334155;
+            border: 4px solid #94a3b8;
+            border-radius: 50%;
+            animation: spinWheel 0.4s linear infinite;
+        }
+        
+        @keyframes spinWheel {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        /* 3. BÁNH KEM */
+        
+        .cake-stage {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            max-width: 380px;
+            transition: opacity 0.6s ease;
+        }
+        
+        .cake-prompt {
+            color: #fef08a;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .cake-container {
+            position: relative;
+            width: 260px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        
+        .cake-tier {
+            opacity: 0;
+            transform: translateY(-500px);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .cake-tier.drop {
+            animation: dropBounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        @keyframes dropBounce {
+            0% {
+                transform: translateY(-500px);
+                opacity: 0;
+            }
+            70% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            85% {
+                transform: translateY(-12px);
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .tier-bottom {
+            width: 230px;
+            height: 65px;
+            background: #f472b6;
+            border-radius: 12px 12px 6px 6px;
+            border: 3px solid #fbcfe8;
+            z-index: 1;
+        }
+        
+        .tier-bottom::after {
+            content: '🍓 🍓 🍓 🍓 🍓';
+            position: absolute;
+            top: 14px;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+        }
+        
+        .tier-middle {
+            width: 170px;
+            height: 55px;
+            background: #fb923c;
+            border-radius: 10px 10px 4px 4px;
+            border: 3px solid #ffedd5;
+            margin-bottom: -4px;
+            z-index: 2;
+        }
+        
+        .tier-middle::after {
+            content: '🍫 🍫 🍫 🍫';
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+        
+        .tier-top {
+            width: 120px;
+            height: 48px;
+            background: #fef08a;
+            border-radius: 8px 8px 4px 4px;
+            border: 3px solid #fffbeb;
+            margin-bottom: -4px;
+            z-index: 3;
+        }
+        
+        .tier-top::after {
+            content: '🍒 🍒 🍒';
+            position: absolute;
+            top: 8px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .candle {
+            opacity: 0;
+            transform: translateY(-500px);
+            width: 14px;
+            height: 40px;
+            background: repeating-linear-gradient(45deg, #ef4444, #ef4444 6px, #ffffff 6px, #ffffff 12px);
+            border-radius: 4px;
+            position: relative;
+            margin-bottom: -2px;
+            z-index: 4;
+            cursor: pointer;
+        }
+        
+        .candle.drop {
+            animation: dropBounce 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        .flame {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 22px;
+            background: radial-gradient(circle, #fef08a 20%, #f97316 70%, transparent 100%);
+            border-radius: 50% 50% 35% 35%;
+            box-shadow: 0 0 16px #f59e0b;
+            animation: flicker 0.15s infinite alternate;
+        }
+        
+        @keyframes flicker {
+            0% {
+                transform: translateX(-50%) scale(1) rotate(-2deg);
+            }
+            100% {
+                transform: translateX(-50%) scale(1.1) rotate(2deg);
+            }
+        }
+        
+        .flame.extinguished {
+            display: none;
+        }
+        
+        .smoke {
+            display: none;
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2rem;
+            animation: smokeRise 1s forwards ease-out;
+        }
+        
+        @keyframes smokeRise {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, 0) scale(0.6);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -30px) scale(1.6);
+            }
+        }
+        
+        .blow-btn {
+            margin-top: 26px;
+            background: #f59e0b;
+            color: #78350f;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 800;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+            display: none;
+            animation: pulse 1.3s infinite;
+        }
+        /* 4. THÔNG ĐIỆP BỨC THƯ */
+        
+        .letter-modal {
+            display: none;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 28px 22px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            animation: popUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        @keyframes popUp {
+            from {
+                opacity: 0;
+                transform: scale(0.85);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .letter-modal h3 {
+            color: #dc2626;
+            font-size: 1.28rem;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+        
+        .letter-content {
+            font-size: 0.98rem;
+            line-height: 1.7;
+            color: #334155;
+            white-space: pre-line;
+            text-align: left;
+            border-top: 1px dashed #fecdd3;
+            padding-top: 14px;
+            min-height: 110px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Nút bật/tắt nhạc -->
+    <div class="music-toggle" id="musicBtn" onclick="toggleMusic()">🎵</div>
+
+    <!-- Nhạc Dù Cho Mai Về Sau -->
+    <audio id="bgMusic" loop preload="auto">
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+    <div class="title-hint" id="hint">Hành khách vui lòng xuất trình vé 🎫</div>
+
+    <!-- BƯỚC 1: VÉ TÀU -->
+    <div class="ticket-container" id="ticket">
+        <div class="ticket-header">
+            <h2>LOVE EXPRESS</h2>
+            <p>Chuyến Tàu Sinh Nhật Đặc Biệt</p>
+        </div>
+
+        <div class="ticket-body">
+            <div class="route">
+                <div class="station">
+                    <div class="station-code">TRAI TIM</div>
+                    <div class="station-name">Ga Xuất Phát</div>
+                </div>
+                <div class="train-icon">🚂</div>
+                <div class="station">
+                    <div class="station-code">HANH PHUC</div>
+                    <div class="station-name">Ga Đến</div>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <span>Hành khách</span>
+                    <strong>Em Yêu ❤️</strong>
+                </div>
+                <div class="info-item">
+                    <span>Ngày đi</span>
+                    <strong>Hôm nay 🎂</strong>
+                </div>
+                <div class="info-item">
+                    <span>Toa / Ghế</span>
+                    <strong>Toa 2026 - Ghế 2010</strong>
+                </div>
+                <div class="info-item">
+                    <span>Thời hạn</span>
+                    <strong>Trọn đời ♾️</strong>
+                </div>
+            </div>
+
+            <div class="tear-line">
+                <div class="dashed"></div>
+            </div>
+        </div>
+
+        <div class="ticket-stub">
+            <button class="punch-btn" id="punchBtn" onclick="punchTicket()">Bấm Soát Vé ✂️</button>
+            <div class="stamp" id="stamp">ĐÃ SOÁT VÉ ✔</div>
+        </div>
+    </div>
+
+    <!-- BƯỚC 2: XE LỬA CHẠY XUÔI -->
+    <div class="train-stage" id="trainStage">
+        <div class="train-caption">Tàu đang chạy từ ga Trái Tim đến ga Hạnh Phúc... 💕</div>
+        <div class="train-track-view">
+            <div class="giant-train" id="giantTrain">
+
+                <!-- Toa hạnh phúc -->
+                <div class="train-carriage">
+                    <div class="carriage-label">TOA HẠNH PHÚC 💖</div>
+                    <div class="carriage-windows">
+                        <div class="window"></div>
+                        <div class="window"></div>
+                        <div class="window"></div>
+                    </div>
+                    <div class="carriage-wheels">
+                        <div class="wheel"></div>
+                        <div class="wheel"></div>
+                        <div class="wheel"></div>
+                    </div>
+                </div>
+
+                <!-- Toa 2026 -->
+                <div class="train-carriage">
+                    <div class="carriage-label">TOA 2026 • GHẾ 2010</div>
+                    <div class="carriage-windows">
+                        <div class="window"></div>
+                        <div class="window"></div>
+                        <div class="window"></div>
+                    </div>
+                    <div class="carriage-wheels">
+                        <div class="wheel"></div>
+                        <div class="wheel"></div>
+                        <div class="wheel"></div>
+                    </div>
+                </div>
+
+                <!-- Đầu tàu hơi nước dẫn đầu -->
+                <svg class="locomotive" viewBox="0 0 280 190">
+        <path d="M 60,70 L 60,30 L 85,30 L 85,70 Z" fill="#475569" />
+        <path d="M 50,30 L 95,30 L 90,20 L 55,20 Z" fill="#64748b" />
+        <path d="M 170,40 L 270,40 L 270,150 L 170,150 Z" fill="#1e293b" />
+        <path d="M 160,30 L 275,30 L 275,40 L 160,40 Z" fill="#991b1b" />
+        <rect x="185" y="55" width="45" height="40" rx="6" fill="#fef08a" />
+        <path d="M 40,70 L 170,70 L 170,150 L 40,150 Z" fill="#b91c1c" />
+        <path d="M 40,70 C 15,70 15,150 40,150 Z" fill="#991b1b" />
+        <polygon points="10,135 40,120 40,155 10,155" fill="#475569" />
+        <circle cx="15" cy="100" r="14" fill="#fbbf24" filter="drop-shadow(0 0 10px #facc15)" />
+        <circle cx="95" cy="155" r="28" fill="#1e293b" stroke="#cbd5e1" stroke-width="4" />
+        <circle cx="165" cy="155" r="28" fill="#1e293b" stroke="#cbd5e1" stroke-width="4" />
+        <circle cx="235" cy="155" r="28" fill="#1e293b" stroke="#cbd5e1" stroke-width="4" />
+        <circle cx="45" cy="165" r="16" fill="#1e293b" stroke="#cbd5e1" stroke-width="3" />
+      </svg>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- BƯỚC 3: BÁNH KEM -->
+    <div class="cake-stage" id="cakeStage">
+        <div class="cake-prompt" id="cakePrompt">Món quà ngọt ngào đang hạ cánh... 🎂</div>
+        <div class="cake-container">
+            <div class="candle" id="candle" onclick="blowCandle()">
+                <div class="flame" id="flame"></div>
+                <div class="smoke" id="smoke">💨</div>
+            </div>
+            <div class="cake-tier tier-top" id="tierTop"></div>
+            <div class="cake-tier tier-middle" id="tierMiddle"></div>
+            <div class="cake-tier tier-bottom" id="tierBottom"></div>
+        </div>
+        <button class="blow-btn" id="blowBtn" onclick="blowCandle()">Thổi Tắt Nến Nè 🕯️💨</button>
+    </div>
+
+    <!-- BƯỚC 4: THÔNG ĐIỆP BỨC THƯ -->
+    <div class="letter-modal" id="letterModal">
+        <h3>Thông Điệp Từ Trưởng Tàu 💌</h3>
+        <div class="letter-content" id="letterText"></div>
+    </div>
+
+    <script>
+        const message = "Chúc mừng sinh nhật cô gái đặc biệt nhất của anh!\n\nChuyến tàu đã chính thức cập bến ga Hạnh Phúc mang theo chiếc bánh kem ngọt ngào nhất dành cho em. Chúc em tuổi mới luôn xinh đẹp, rạng rỡ và luôn cảm thấy bình yên, hạnh phúc bên cạnh anh!";
+
+        let isPunched = false;
+        let isBlown = false;
+
+        // 1. TẠO ÂM THANH CÒI TÀU BẰNG WEB AUDIO API
+        let audioCtx = null;
+
+        function playTrainWhistle() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+
+                function whistleBlast(startTime, duration) {
+                    const osc1 = audioCtx.createOscillator();
+                    const osc2 = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+
+                    // Hợp âm còi tàu hơi nước đặc trưng (khoảng 440Hz & 587Hz)
+                    osc1.frequency.setValueAtTime(440, startTime);
+                    osc2.frequency.setValueAtTime(587.33, startTime);
+
+                    gainNode.gain.setValueAtTime(0, startTime);
+                    gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.3, startTime + duration - 0.2);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+                    osc1.connect(gainNode);
+                    osc2.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    osc1.start(startTime);
+                    osc2.start(startTime);
+                    osc1.stop(startTime + duration);
+                    osc2.stop(startTime + duration);
+                }
+
+                // Tiếng còi rúc 2 hồi: Tuuu... Tuuuuu!
+                whistleBlast(audioCtx.currentTime + 0.1, 0.7);
+                whistleBlast(audioCtx.currentTime + 1.0, 1.4);
+            } catch (e) {
+                console.log("Audio not supported", e);
+            }
+        }
+
+        // 2. PHÁT NHẠC NỀN
+        const bgMusic = document.getElementById('bgMusic');
+
+        function startMusic() {
+            if (bgMusic) {
+                bgMusic.volume = 0.7;
+                bgMusic.play().catch(e => console.log("Cần tương tác để phát nhạc"));
+            }
+        }
+
+        function toggleMusic() {
+            if (bgMusic.paused) {
+                bgMusic.play();
+                document.getElementById('musicBtn').innerText = '🎵';
+            } else {
+                bgMusic.pause();
+                document.getElementById('musicBtn').innerText = '🔇';
+            }
+        }
+
+        // SOÁT VÉ
+        function punchTicket() {
+            if (isPunched) return;
+            isPunched = true;
+
+            // Bật nhạc nền ngay khi có tương tác bấm
+            startMusic();
+
+            const punchBtn = document.getElementById('punchBtn');
+            const stamp = document.getElementById('stamp');
+            const hint = document.getElementById('hint');
+            const ticket = document.getElementById('ticket');
+            const trainStage = document.getElementById('trainStage');
+            const giantTrain = document.getElementById('giantTrain');
+
+            punchBtn.style.display = 'none';
+            stamp.classList.add('stamped');
+
+            setTimeout(() => {
+                ticket.style.opacity = '0';
+                ticket.style.transform = 'scale(0.85)';
+                hint.style.opacity = '0';
+
+                setTimeout(() => {
+                    ticket.style.display = 'none';
+                    hint.style.display = 'none';
+
+                    trainStage.style.display = 'flex';
+                    giantTrain.classList.add('run');
+                    document.body.classList.add('earthquake');
+
+                    // Hú còi tàu vang rền
+                    playTrainWhistle();
+
+                    setTimeout(() => {
+                        document.body.classList.remove('earthquake');
+                        trainStage.style.transition = 'opacity 0.6s ease';
+                        trainStage.style.opacity = '0';
+
+                        setTimeout(() => {
+                            trainStage.style.display = 'none';
+                            startCakeDrop();
+                        }, 600);
+                    }, 5200);
+
+                }, 500);
+            }, 700);
+        }
+
+        function startCakeDrop() {
+            const cakeStage = document.getElementById('cakeStage');
+            cakeStage.style.display = 'flex';
+
+            const tierBottom = document.getElementById('tierBottom');
+            const tierMiddle = document.getElementById('tierMiddle');
+            const tierTop = document.getElementById('tierTop');
+            const candle = document.getElementById('candle');
+            const blowBtn = document.getElementById('blowBtn');
+            const cakePrompt = document.getElementById('cakePrompt');
+
+            setTimeout(() => tierBottom.classList.add('drop'), 300);
+            setTimeout(() => tierMiddle.classList.add('drop'), 900);
+            setTimeout(() => tierTop.classList.add('drop'), 1500);
+            setTimeout(() => {
+                candle.classList.add('drop');
+                setTimeout(() => {
+                    cakePrompt.innerText = "Em hãy ước một điều rồi chạm để thổi nến nhé ✨";
+                    blowBtn.style.display = 'block';
+                }, 800);
+            }, 2100);
+        }
+
+        function blowCandle() {
+            if (isBlown) return;
+            isBlown = true;
+
+            const flame = document.getElementById('flame');
+            const smoke = document.getElementById('smoke');
+            const blowBtn = document.getElementById('blowBtn');
+            const cakeStage = document.getElementById('cakeStage');
+            const letterModal = document.getElementById('letterModal');
+
+            flame.classList.add('extinguished');
+            smoke.style.display = 'block';
+            blowBtn.style.display = 'none';
+
+            confetti({
+                particleCount: 120,
+                spread: 80,
+                origin: {
+                    y: 0.6
+                }
+            });
+
+            setTimeout(() => {
+                cakeStage.style.opacity = '0';
+                setTimeout(() => {
+                    cakeStage.style.display = 'none';
+                    letterModal.style.display = 'block';
+                    typeWriter(message, 'letterText');
+                }, 600);
+            }, 1200);
+        }
+
+        function typeWriter(text, elementId, i = 0) {
+            if (i < text.length) {
+                document.getElementById(elementId).textContent += text.charAt(i);
+                setTimeout(() => typeWriter(text, elementId, i + 1), 32);
+            }
+        }
+    </script>
+
+</body>
+
+</html>
